@@ -1,12 +1,16 @@
 const pageScraper = require('./pageScraper');
+const pagePdfScraper = require('./pagePdfScraper');
+
 
 let data = { url: [], group: [] }
 let funciones = []
-async function scrapeAll(browserInstance) {
+let scrapeAll = (browserInstance) => new Promise(async(resolve, reject) => {
+// async function scrapeAll(browserInstance) {
     let browser;
     try {
         browser = await browserInstance;
         const id = await pageScraper.scraper(browser);
+        console.log(id)
         data.url.push(id)
         for (let index = 0; index < id.length; index++) {
             const element = id[index];
@@ -40,13 +44,13 @@ async function scrapeAll(browserInstance) {
             data.group.push(id)
         }
 
-        return(data);
+        resolve(data);
             // await newPage.close();
     }
     catch (err) {
         console.log("Could not resolve the browser instance => ", err);
     }
-}
+})
 
 
 
