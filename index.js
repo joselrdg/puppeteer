@@ -8,7 +8,7 @@ let browserInstance = browserObject.startBrowser();
 
 // Pass the browser instance to the scraper controller
 const url = "https://cuentosinfantiles.top/wp-content/uploads/cuentos_digital/Peter%20Pan.pdf"
-pagePdfScraper(url)
+pagePdfScraper(browserInstance, url)
 // scraperController(browserInstance)
 // .then((d)=>{pagePdfScraper(d)})
 // .catch((e)=>{console.error(e)})
