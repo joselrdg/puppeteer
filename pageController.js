@@ -27,8 +27,9 @@ let scrapeAll = (browserInstance) => new Promise(async(resolve, reject) => {
                             let results = [];
                             let items = document.querySelectorAll('.standard > a');
                             items.forEach((item) => {
-                                results.push(
-                                    item.getAttribute('href'));
+                                let url = item.getAttribute('href')
+                                url = url.replace('../../','')
+                                results.push(url);
                             });
                             return results;
                         })

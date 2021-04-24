@@ -7,11 +7,21 @@ const pagePdfScraper = require('./pagePdfScraper');
 let browserInstance = browserObject.startBrowser();
 
 // Pass the browser instance to the scraper controller
-const url = "https://cuentosinfantiles.top/wp-content/uploads/cuentos_digital/Peter%20Pan.pdf"
-pagePdfScraper(browserInstance, url)
+const urlS = ["http://www.fci.be/Nomenclature/Standards/166g01-es.pdf",'http://www.fci.be/Nomenclature/Standards/293g01-es.pdf','http://www.fci.be/Nomenclature/Standards/015g01-es.pdf']
+
+// urlS.forEach(element => {
+    
+ pagePdfScraper(browserInstance, "http://www.fci.be/Nomenclature/Standards/166g01-es.pdf")
+ .then((r)=>{console.log(r)})
+//  .then('pdf guardado correctamente')
+ .catch((e)=> console.error(e))    
+// }); 
+
+
+// pagePdfScraper(browserInstance, urlS)
 // scraperController(browserInstance)
-// .then((d)=>{pagePdfScraper(d)})
-// .catch((e)=>{console.error(e)})
+//     .then((d) => { pagePdfScraper(d) })
+//     .catch((e) => { console.error(e) })
 
 
 

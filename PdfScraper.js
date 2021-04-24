@@ -7,6 +7,7 @@ const puppeteer = require('puppeteer-extra');
 
 // add stealth plugin and use defaults (all evasion techniques)
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const { resolve } = require('path');
 puppeteer.use(StealthPlugin());
 
 
@@ -85,7 +86,7 @@ puppeteer.use(StealthPlugin());
             });
     });
 
-    console.log(`My file is now located in /tmp/razas/`);
+    return(console.log(`My file is now located in /tmp/razas/`));
 
     // await page.repl()
     // await browser.repl()

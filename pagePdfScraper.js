@@ -10,11 +10,12 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
 
-let scrapePdf = (browserInstance) => new Promise(async (resolve, reject) => {
+let scrapePdf = (browserInstance, urlS) => new Promise(async (resolve, reject) => {
     // async function scrapeAll(browserInstance) {
     let browser;
     try {
-        const url = 'https://cuentosinfantiles.top/cuentos-infantiles-pdf/'
+        console.log(urlS)
+        const url = 'http://www.fci.be/'
         browser = await browserInstance;
         // process.exit(31);
         // use tor
@@ -53,51 +54,53 @@ let scrapePdf = (browserInstance) => new Promise(async (resolve, reject) => {
         });
 
 
-        console.log('Convert an ArrayBuffer to an UTF-8 String')
-        await page.evaluate(async () => {
-            function arrayBufferToString(buffer) { // Convert an ArrayBuffer to an UTF-8 String
 
-                let bufView = new Uint8Array(buffer);
-                let length = bufView.length;
-                let result = '';
-                let addition = Math.pow(2, 8) - 1;
+        console.log('Convert an ArrayBuffer to an UTF-8 String...')
+        await page.evaluate((urlS) => {            
+                function arrayBufferToString(buffer) { // Convert an ArrayBuffer to an UTF-8 String
+                    let bufView = new Uint8Array(buffer);
+                    let length = bufView.length;
+                    let result = '';
+                    let addition = Math.pow(2, 8) - 1;
 
-                for (let i = 0; i < length; i += addition) {
-                    if (i + addition > length) {
-                        addition = length - i;
+                    for (let i = 0; i < length; i += addition) {
+                        if (i + addition > length) {
+                            addition = length - i;
+                        }
+                        result += String.fromCharCode.apply(null, bufView.subarray(i, i + addition));
                     }
-                    result += String.fromCharCode.apply(null, bufView.subarray(i, i + addition));
+                    return result;
                 }
-                return result;
-            }
 
-            let geturl = 'https://cuentosinfantiles.top/wp-content/uploads/cuentos_digital/Rapunzel.pdf';
-            const filename = geturl.split('/').pop().replace(/\?.*$/, '');
+                let geturl = urlS;
+                const filename = geturl.split('/').pop().replace(/\?.*$/, '');
 
-            return fetch(geturl, {
-                credentials: 'same-origin', // usefull when we are logged into a website and want to send cookies
-                responseType: 'arraybuffer', // get response as an ArrayBuffer
-            })
-                .then(response => response.arrayBuffer())
-                .then((arrayBuffer) => {
-                    let bufstring = arrayBufferToString(arrayBuffer);
-                    console.log(`My file is now located in /tmp/razas/${filename}`);
-                    return window.writeABString(bufstring, `/tmp/razas/${filename}`);
+                return fetch(geturl, {
+                    credentials: 'same-origin', // usefull when we are logged into a website and want to send cookies
+                    responseType: 'arraybuffer', // get response as an ArrayBuffer
                 })
-                .catch((error) => {
-                    console.log('Request failed: ', error);
-                });
-        });
+                    .then(response => response.arrayBuffer())
+                    .then((arrayBuffer) => {
+                        let bufstring = arrayBufferToString(arrayBuffer);
+                        return window.writeABString(bufstring, `/tmp/razas/raza${filename}`);
+                    })
+                    .catch((error) => {
+                        console.log('Request failed: ', error);
+                    });            
+        }, urlS
+        );
+        console.log(`My file is now located in /tmp/`)
 
 
         // await page.repl()
         // await browser.repl()
 
-        browser.close();
+
+        // browser.close();
     }
     catch (err) {
         console.log("Could not resolve the browser instance => ", err);
     }
 })
 
-module.exports = (data) => scrapePdf(data)
+module.exports = (browserInstance, urlS) => scrapePdf(browserInstance, urlS)
