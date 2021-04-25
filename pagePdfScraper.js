@@ -10,53 +10,54 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
 
-let scrapePdf = (browserInstance, urlS) => new Promise(async (resolve, reject) => {
+let scrapePdf = (browserInstance, arrayUrlS) => new Promise(async (resolve, reject) => {
     // async function scrapeAll(browserInstance) {
     let browser;
     try {
-        console.log(urlS)
-        const url = 'http://www.fci.be/'
-        browser = await browserInstance;
-        // process.exit(31);
-        // use tor
-        //const browser = await puppeteer.launch({args:['--proxy-server=socks5://127.0.0.1:9050']});
-        const page = await browser.newPage();
+        async function resolveAfter(urlS, numero) {
+            console.log('Descargando pdg de: '+ urlS)
+            const url = 'http://www.fci.be/'
+            browser = await browserInstance;
+            // process.exit(31);
+            // use tor
+            //const browser = await puppeteer.launch({args:['--proxy-server=socks5://127.0.0.1:9050']});
+            const page = await browser.newPage();
 
-        // https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegotourl-options
-        const waittill = { timeout: 10000, waitUntil: ['networkidle2'] }
-        await page.goto(url, waittill);
+            // https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#pagegotourl-options
+            const waittill = { timeout: 10000, waitUntil: ['networkidle2'] }
+            await page.goto(url, waittill);
 
-        console.log('Convert a UTF-8 String to an ArrayBuffer')
-        await page.exposeFunction("writeABString", async (strbuf, targetFile) => {
+            console.log('Convert a UTF-8 String to an ArrayBuffer')
+            await page.exposeFunction("writeABString", async (strbuf, targetFile) => {
 
-            const str2ab = function _str2ab(str) { // Convert a UTF-8 String to an ArrayBuffer
+                const str2ab = function _str2ab(str) { // Convert a UTF-8 String to an ArrayBuffer
 
-                let buf = new ArrayBuffer(str.length); // 1 byte for each char
-                let bufView = new Uint8Array(buf);
+                    let buf = new ArrayBuffer(str.length); // 1 byte for each char
+                    let bufView = new Uint8Array(buf);
 
-                for (let i = 0, strLen = str.length; i < strLen; i++) {
-                    bufView[i] = str.charCodeAt(i);
+                    for (let i = 0, strLen = str.length; i < strLen; i++) {
+                        bufView[i] = str.charCodeAt(i);
+                    }
+                    return buf;
                 }
-                return buf;
-            }
 
-            return new Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
 
-                // Convert the ArrayBuffer string back to an ArrayBufffer, which in turn is converted to a Buffer
-                let buf = Buffer.from(str2ab(strbuf));
+                    // Convert the ArrayBuffer string back to an ArrayBufffer, which in turn is converted to a Buffer
+                    let buf = Buffer.from(str2ab(strbuf));
 
-                // Try saving the file.        
-                fs.writeFile(targetFile, buf, (err, text) => {
-                    if (err) reject(err);
-                    else resolve(targetFile);
+                    // Try saving the file.        
+                    fs.writeFile(targetFile, buf, (err, text) => {
+                        if (err) reject(err);
+                        else resolve(targetFile);
+                    });
                 });
             });
-        });
 
 
 
-        console.log('Convert an ArrayBuffer to an UTF-8 String...')
-        await page.evaluate((urlS) => {            
+            console.log('Convert an ArrayBuffer to an UTF-8 String...')
+            await page.evaluate((urlS, numero) => {
                 function arrayBufferToString(buffer) { // Convert an ArrayBuffer to an UTF-8 String
                     let bufView = new Uint8Array(buffer);
                     let length = bufView.length;
@@ -73,7 +74,8 @@ let scrapePdf = (browserInstance, urlS) => new Promise(async (resolve, reject) =
                 }
 
                 let geturl = urlS;
-                const filename = geturl.split('/').pop().replace(/\?.*$/, '');
+                // const filename = geturl.split('/').pop().replace(/\?.*$/, '');
+
 
                 return fetch(geturl, {
                     credentials: 'same-origin', // usefull when we are logged into a website and want to send cookies
@@ -82,21 +84,29 @@ let scrapePdf = (browserInstance, urlS) => new Promise(async (resolve, reject) =
                     .then(response => response.arrayBuffer())
                     .then((arrayBuffer) => {
                         let bufstring = arrayBufferToString(arrayBuffer);
-                        return window.writeABString(bufstring, `/tmp/razas/raza${filename}`);
+                        return window.writeABString(bufstring, `/tmp/${numero}.pdf`);
                     })
                     .catch((error) => {
                         console.log('Request failed: ', error);
-                    });            
-        }, urlS
-        );
-        console.log(`My file is now located in /tmp/`)
-
-
+                    });
+            }, urlS, numero
+            );
+        }
         // await page.repl()
         // await browser.repl()
-
-
-        // browser.close();
+        let numName = 0
+        let fin = 0
+        for (arr in arrayUrlS) {            
+            for (urls in arrayUrlS[arr]) {
+                await resolveAfter(arrayUrlS[arr][urls], numName)
+                numName++
+                console.log(`Tarea completada. Pdfs descargados: ${numName}` )
+            }
+            fin++
+            if(fin >= arrayUrlS.length){
+                resolve(numName)
+            }
+        }
     }
     catch (err) {
         console.log("Could not resolve the browser instance => ", err);
